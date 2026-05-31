@@ -236,43 +236,55 @@ function SetupScreen() {
 // ═══════════════════════════════════════════════════════════════════════════
 function LoginScreen({ onLogin }) {
   const [error, setError]   = useState("");
-  const [loading, setLoading] = useState(true);
+  const [ready, setReady]   = useState(false);
+  const [waiting, setWaiting] = useState(false);
   const btnRef  = useRef(null);
   const cbRef   = useRef(null);
 
   cbRef.current = useCallback(async response => {
-    setError("");
+    setError(""); setWaiting(true);
     try {
       const r = await apiAuth(response.credential);
-      if (!r.ok) { setError(r.error || "Acceso no autorizado."); return; }
+      if (!r.ok) { setError(r.error || "Acceso no autorizado."); setWaiting(false); return; }
       onLogin({ session: r.session, email: r.user.email, name: r.user.name,
         picture: r.user.picture, expiresAt: r.user.exp });
     } catch (e) {
       setError("No se pudo validar con el servidor. Verificá tu conexión e intentá de nuevo.");
+      setWaiting(false);
     }
   }, [onLogin]);
 
+  // Paso 1: cargar el script de Google una sola vez
   useEffect(() => {
+    if (window.google && window.google.accounts && window.google.accounts.id) { setReady(true); return; }
+    const ex = document.getElementById("gsi-script");
+    if (ex) { ex.addEventListener("load", () => setReady(true)); return; }
     const script = document.createElement("script");
+    script.id = "gsi-script";
     script.src = "https://accounts.google.com/gsi/client";
     script.async = true;
-    script.onload = () => {
-      setLoading(false);
+    script.onload = () => setReady(true);
+    script.onerror = () => setError("No se pudo cargar Google. Revisá tu conexión o si hay un bloqueador de anuncios activo.");
+    document.head.appendChild(script);
+  }, []);
+
+  // Paso 2: dibujar el boton cuando el script esta listo y el contenedor existe
+  useEffect(() => {
+    if (!ready || !btnRef.current) return;
+    try {
       window.google.accounts.id.initialize({
         client_id: CONFIG.CLIENT_ID,
         callback: r => cbRef.current(r),
         auto_select: false,
       });
-      if (btnRef.current) {
-        window.google.accounts.id.renderButton(btnRef.current, {
-          theme: "outline", size: "large", text: "signin_with",
-          shape: "rectangular", logo_alignment: "left", width: 320,
-        });
-      }
-    };
-    script.onerror = () => setLoading(false);
-    document.head.appendChild(script);
-  }, []);
+      window.google.accounts.id.renderButton(btnRef.current, {
+        theme: "filled_blue", size: "large", text: "signin_with",
+        shape: "pill", logo_alignment: "left", width: 280,
+      });
+    } catch (e) {
+      setError("No se pudo inicializar el login de Google: " + (e && e.message ? e.message : e));
+    }
+  }, [ready]);
 
   return (
     <div style={{ minHeight: "100vh",
@@ -307,16 +319,13 @@ function LoginScreen({ onLogin }) {
           Iniciá sesión con tu cuenta de Google de bitek
         </p>
 
-        {/* Google Button or loading */}
-        {loading ? (
-          <div style={{ height: 44, display: "flex", alignItems: "center",
-            justifyContent: "center", color: "#475569", fontSize: 13 }}>
-            Cargando…
-          </div>
-        ) : (
-          <div style={{ display: "flex", justifyContent: "center" }}>
-            <div ref={btnRef} />
-          </div>
+        {/* Botón de Google — el contenedor SIEMPRE está montado */}
+        {!ready && !error && (
+          <div style={{ color: "#475569", fontSize: 13, marginBottom: 10 }}>Cargando Google…</div>
+        )}
+        <div ref={btnRef} style={{ display: "flex", justifyContent: "center", minHeight: 44 }} />
+        {waiting && (
+          <div style={{ marginTop: 12, color: "#60A5FA", fontSize: 13, fontWeight: 600 }}>⟳ Validando acceso…</div>
         )}
 
         {/* Error */}
