@@ -418,20 +418,22 @@ function Overlay({ onClose, children }) {
 // ═══════════════════════════════════════════════════════════════════════════
 //  FORMULARIO GARANTÍA
 // ═══════════════════════════════════════════════════════════════════════════
+const FORM_G2 = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" };
+function FormSection({ icon, title, children }) {
+  return (
+    <div style={{ background: "#F8FAFC", borderRadius: 10, padding: "14px 16px" }}>
+      <p style={{ margin: "0 0 12px", fontSize: 11, fontWeight: 700, color: "#94A3B8",
+        textTransform: "uppercase", letterSpacing: ".07em" }}>{icon} {title}</p>
+      <div style={FORM_G2}>{children}</div>
+    </div>
+  );
+}
+
 function GarantiaForm({ initial, onSave, onClose }) {
   const [f, setF] = useState(initial ? { ...EMPTY_FORM, ...initial } : EMPTY_FORM);
   const set = k => e => setF(p => ({ ...p, [k]: e.target.value }));
   const ok = f.plataforma && f.nombreCliente;
-  const g2 = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" };
   const fw = { gridColumn: "1/-1" };
-
-  const Section = ({ icon, title, children }) => (
-    <div style={{ background: "#F8FAFC", borderRadius: 10, padding: "14px 16px" }}>
-      <p style={{ margin: "0 0 12px", fontSize: 11, fontWeight: 700, color: "#94A3B8",
-        textTransform: "uppercase", letterSpacing: ".07em" }}>{icon} {title}</p>
-      <div style={g2}>{children}</div>
-    </div>
-  );
 
   return <>
     <div style={{ padding: "22px 28px 18px", borderBottom: "1px solid #F1F5F9",
@@ -447,34 +449,34 @@ function GarantiaForm({ initial, onSave, onClose }) {
     </div>
 
     <div style={{ padding: "20px 28px", display: "flex", flexDirection: "column", gap: 12 }}>
-      <Section icon="🏷️" title="Identificación">
+      <FormSection icon="🏷️" title="Identificación">
         <div><Label text="Plataforma" required /><select style={inputCls} value={f.plataforma} onChange={set("plataforma")}><option value="">Seleccionar…</option>{PLATFORMS.map(p=><option key={p}>{p}</option>)}</select></div>
         <div><Label text="ID de Venta" /><input style={inputCls} value={f.idVenta} onChange={set("idVenta")} placeholder="MLA-12345678" /></div>
         <div><Label text="Nombre del Cliente" required /><input style={inputCls} value={f.nombreCliente} onChange={set("nombreCliente")} placeholder="Nombre completo" /></div>
         <div><Label text="SKU / Producto" /><input style={inputCls} value={f.sku} onChange={set("sku")} placeholder="55840 - Monopatín MK084" /></div>
-      </Section>
+      </FormSection>
 
-      <Section icon="📋" title="Estado del caso">
+      <FormSection icon="📋" title="Estado del caso">
         <div><Label text="Fecha de Venta" /><input type="date" style={inputCls} value={f.fechaVenta} onChange={set("fechaVenta")} /></div>
         <div><Label text="Fecha del Problema" /><input type="date" style={inputCls} value={f.fechaProblema} onChange={set("fechaProblema")} /></div>
         <div><Label text="Estado" /><select style={inputCls} value={f.estadoGarantia} onChange={set("estadoGarantia")}>{STATUSES.map(s=><option key={s}>{s}</option>)}</select></div>
         <div><Label text="Reclamo en Mercado Libre" /><select style={inputCls} value={f.reclamoML} onChange={set("reclamoML")}>{ML_OPTIONS.map(o=><option key={o}>{o}</option>)}</select></div>
         <div style={fw}><Label text="Descripción del Problema" /><textarea style={{...inputCls,minHeight:70,resize:"vertical"}} value={f.descripcionProblema} onChange={set("descripcionProblema")} placeholder="Describí el defecto o motivo del reclamo…" /></div>
         <div style={fw}><Label text="Acción Tomada" /><textarea style={{...inputCls,minHeight:54,resize:"vertical"}} value={f.accionTomada} onChange={set("accionTomada")} placeholder="Cambio, reembolso, reparación, envío de repuesto…" /></div>
-      </Section>
+      </FormSection>
 
-      <Section icon="💰" title="Costos">
+      <FormSection icon="💰" title="Costos">
         <div><Label text="Costo Envío ($)" /><input type="number" style={inputCls} value={f.costoEnvio} onChange={set("costoEnvio")} placeholder="0" /></div>
         <div><Label text="Precio Producto ($)" /><input type="number" style={inputCls} value={f.precioProducto} onChange={set("precioProducto")} placeholder="0" /></div>
-      </Section>
+      </FormSection>
 
-      <Section icon="📍" title="Contacto y Envío">
+      <FormSection icon="📍" title="Contacto y Envío">
         <div><Label text="Teléfono" /><input style={inputCls} value={f.telefono} onChange={set("telefono")} placeholder="+54 11…" /></div>
         <div><Label text="Email" /><input type="email" style={inputCls} value={f.mail} onChange={set("mail")} placeholder="cliente@mail.com" /></div>
         <div style={fw}><Label text="Dirección" /><input style={inputCls} value={f.direccion} onChange={set("direccion")} placeholder="Calle, número, localidad" /></div>
         <div><Label text="Código Postal" /><input style={inputCls} value={f.codigoPostal} onChange={set("codigoPostal")} placeholder="1414" /></div>
         <div style={fw}><Label text="Notas adicionales" /><textarea style={{...inputCls,minHeight:54,resize:"vertical"}} value={f.notas} onChange={set("notas")} placeholder="Fotos, tracking, observaciones…" /></div>
-      </Section>
+      </FormSection>
     </div>
 
     <div style={{ padding: "16px 28px 24px", display: "flex", gap: 10,
